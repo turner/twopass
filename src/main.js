@@ -1,25 +1,38 @@
 import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import RenderPass1 from './scenes/pass1.js';
 import RenderPass2 from './scenes/pass2.js';
 
+// Initialize renderer and controls
 const canvas = document.getElementById('webgl-canvas');
 const renderer = new THREE.WebGLRenderer({ canvas });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 
-const pass1 = new RenderPass1();
-const pass2 = new RenderPass2();
+// Initialize render passes
+const scene1 = new RenderPass1();
+const scene2 = new RenderPass2();
+
+// Add OrbitControls
+const controls = new OrbitControls(scene1.camera, renderer.domElement);
+controls.enableDamping = true; // Smooth the controls
+controls.dampingFactor = 0.05; // Control damping effect
+controls.screenSpacePanning = false; // Toggle pan behavior
 
 function render() {
-    // First pass: Render to a custom framebuffer
-    renderer.setRenderTarget(pass1.renderTarget);
-    renderer.render(pass1.scene, pass1.camera);
+    // Update controls on each frame
+    controls.update();
 
-    // Second pass: Render to the screen using data from first pass
+    // First pass: Render to the offscreen render target
+    renderer.setRenderTarget(scene1.renderTarget);
+    renderer.render(scene1.scene, scene1.camera);
+
+    // Second pass: Render to the screen using data from the first pass
     renderer.setRenderTarget(null);
-    pass2.updateTexture(pass1.renderTarget.texture);
-    renderer.render(pass2.scene, pass2.camera);
+    scene2.updateTexture(scene1.renderTarget.texture);
+    renderer.render(scene2.scene, scene2.camera);
 
+    // Request the next frame
     requestAnimationFrame(render);
 }
 render();
