@@ -42,19 +42,6 @@ async function init() {
         requestAnimationFrame(render);
     }
 
-    const onWindowResize = () => {
-
-        pass1.camera.aspect = window.innerWidth / window.innerHeight;
-        pass1.camera.updateProjectionMatrix();
-
-        renderer.setSize( window.innerWidth, window.innerHeight );
-
-        const dpr = renderer.getPixelRatio();
-        pass1.renderTarget.setSize( window.innerWidth * dpr, window.innerHeight * dpr );
-
-        render();
-    }
-
     const controls = new OrbitControls( pass1.camera, renderer.domElement );
     controls.enableDamping = true; // Smooth the controls
     controls.dampingFactor = 0.05; // Control damping effect
@@ -69,6 +56,19 @@ async function init() {
     const gui = new GUI();
     gui.add(parameters, 'wireframe' );
     gui.onChange(render);
+
+    const onWindowResize = () => {
+
+        pass1.camera.aspect = window.innerWidth / window.innerHeight;
+        pass1.camera.updateProjectionMatrix();
+
+        renderer.setSize( window.innerWidth, window.innerHeight );
+
+        const dpr = renderer.getPixelRatio();
+        pass1.renderTarget.setSize( window.innerWidth * dpr, window.innerHeight * dpr );
+
+        render();
+    }
 
     window.addEventListener( 'resize', onWindowResize );
 
