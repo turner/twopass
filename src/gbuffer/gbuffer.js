@@ -1,11 +1,8 @@
 import * as THREE from 'three';
-
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
-
-import pass2Vert from '../gbuffer/shaders/gbuffer_pass2.vert.glsl';
-import pass2Frag from '../gbuffer/shaders/gbuffer_pass2.frag.glsl';
 import Pass1 from "./gbufferPass1.js"
+import Pass2 from "./gbufferPass2.js"
 
 init();
 
@@ -24,24 +21,7 @@ async function init() {
     diffuse.colorSpace = THREE.SRGBColorSpace;
 
     const pass1 = new Pass1(window, diffuse)
-
-    postScene = new THREE.Scene();
-    postCamera = new THREE.OrthographicCamera( - 1, 1, 1, - 1, 0, 1 );
-
-    postScene.add( new THREE.Mesh(
-        new THREE.PlaneGeometry( 2, 2 ),
-        new THREE.RawShaderMaterial( {
-            name: 'Post-FX Shader',
-            vertexShader: pass2Vert,
-            fragmentShader: pass2Frag,
-            uniforms: {
-                tDiffuse: { value: pass1.renderTarget.textures[ 0 ] },
-                tNormal: { value: pass1.renderTarget.textures[ 1 ] },
-            },
-            glslVersion: THREE.GLSL3
-        } )
-    ) );
-
+    const pass2 = new Pass2(pass1)
 
     const render = () => {
 
@@ -56,8 +36,8 @@ async function init() {
         renderer.render( pass1.scene, pass1.camera );
 
         // render post FX
-        renderer.setRenderTarget( null );
-        renderer.render( postScene, postCamera );
+        renderer.setRenderTarget(null);
+        renderer.render(pass2.scene, pass2.camera);
 
     }
 
