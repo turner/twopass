@@ -3,75 +3,27 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
-let camera, scene, renderer, controls;
-let renderTarget;
-let postScene, postCamera;
-
-const parameters =
-    {
-        wireframe: false
-    };
-
-const gui = new GUI();
-gui.add(parameters, 'wireframe' );
-gui.onChange( render );
+import pass2Vert from '../gbuffer/shaders/gbuffer_pass2.vert.glsl';
+import pass2Frag from '../gbuffer/shaders/gbuffer_pass2.frag.glsl';
+import Pass1 from "./gbufferPass1.js"
 
 init();
 
-function init() {
+let postScene, postCamera;
 
-    renderer = new THREE.WebGLRenderer();
+async function init() {
+
+    const renderer = new THREE.WebGLRenderer();
     renderer.setPixelRatio( window.devicePixelRatio );
     renderer.setSize( window.innerWidth, window.innerHeight );
     document.body.appendChild( renderer.domElement );
 
-    // Create a multi render target with Float buffers
-
-    renderTarget = new THREE.WebGLRenderTarget(
-        window.innerWidth * window.devicePixelRatio,
-        window.innerHeight * window.devicePixelRatio,
-        {
-            count: 2,
-            minFilter: THREE.NearestFilter,
-            magFilter: THREE.NearestFilter
-        }
-    );
-
-    // Name our G-Buffer attachments for debugging
-
-    renderTarget.textures[ 0 ].name = 'diffuse';
-    renderTarget.textures[ 1 ].name = 'normal';
-
-    // Scene setup
-
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color( 0x222222 );
-
-    camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 50 );
-    camera.position.z = 4;
-
-    const loader = new THREE.TextureLoader();
-
-    const diffuse = loader.load( 'src/gbuffer/hardwood2_diffuse.jpg', render );
+    const diffuse = await loadTexture('src/gbuffer/hardwood2_diffuse.jpg')
     diffuse.wrapS = THREE.RepeatWrapping;
     diffuse.wrapT = THREE.RepeatWrapping;
     diffuse.colorSpace = THREE.SRGBColorSpace;
 
-    scene.add( new THREE.Mesh(
-        new THREE.TorusKnotGeometry( 1, 0.3, 128, 32 ),
-        new THREE.RawShaderMaterial( {
-            name: 'G-Buffer Shader',
-            vertexShader: document.querySelector( '#gbuffer-vert' ).textContent.trim(),
-            fragmentShader: document.querySelector( '#gbuffer-frag' ).textContent.trim(),
-            uniforms: {
-                tDiffuse: { value: diffuse },
-                repeat: { value: new THREE.Vector2( 5, 0.5 ) }
-            },
-            glslVersion: THREE.GLSL3
-        } )
-    ) );
-
-    // PostProcessing setup
+    const pass1 = new Pass1(window, diffuse)
 
     postScene = new THREE.Scene();
     postCamera = new THREE.OrthographicCamera( - 1, 1, 1, - 1, 0, 1 );
@@ -80,56 +32,72 @@ function init() {
         new THREE.PlaneGeometry( 2, 2 ),
         new THREE.RawShaderMaterial( {
             name: 'Post-FX Shader',
-            vertexShader: document.querySelector( '#render-vert' ).textContent.trim(),
-            fragmentShader: document.querySelector( '#render-frag' ).textContent.trim(),
+            vertexShader: pass2Vert,
+            fragmentShader: pass2Frag,
             uniforms: {
-                tDiffuse: { value: renderTarget.textures[ 0 ] },
-                tNormal: { value: renderTarget.textures[ 1 ] },
+                tDiffuse: { value: pass1.renderTarget.textures[ 0 ] },
+                tNormal: { value: pass1.renderTarget.textures[ 1 ] },
             },
             glslVersion: THREE.GLSL3
         } )
     ) );
 
-    // Controls
 
-    controls = new OrbitControls( camera, renderer.domElement );
-    controls.addEventListener( 'change', render );
+    const render = () => {
+
+        pass1.scene.traverse(child => {
+            if ( child.material !== undefined ) {
+                child.material.wireframe = parameters.wireframe;
+            }
+        } );
+
+        // render scene into target
+        renderer.setRenderTarget( pass1.renderTarget );
+        renderer.render( pass1.scene, pass1.camera );
+
+        // render post FX
+        renderer.setRenderTarget( null );
+        renderer.render( postScene, postCamera );
+
+    }
+
+    const onWindowResize = () => {
+
+        pass1.camera.aspect = window.innerWidth / window.innerHeight;
+        pass1.camera.updateProjectionMatrix();
+
+        renderer.setSize( window.innerWidth, window.innerHeight );
+
+        const dpr = renderer.getPixelRatio();
+        pass1.renderTarget.setSize( window.innerWidth * dpr, window.innerHeight * dpr );
+
+        render();
+    }
+
+    const controls = new OrbitControls( pass1.camera, renderer.domElement );
+    controls.addEventListener('change', render);
+
+    const parameters =
+        {
+            wireframe: false
+        };
+
+    const gui = new GUI();
+    gui.add(parameters, 'wireframe' );
+    gui.onChange(render);
 
     window.addEventListener( 'resize', onWindowResize );
 
 }
 
-function onWindowResize() {
-
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-
-    renderer.setSize( window.innerWidth, window.innerHeight );
-
-    const dpr = renderer.getPixelRatio();
-    renderTarget.setSize( window.innerWidth * dpr, window.innerHeight * dpr );
-
-    render();
-
+async function loadTexture(url) {
+    return new Promise((resolve, reject) => {
+        const textureLoader = new THREE.TextureLoader();
+        textureLoader.load(
+            url,
+            (texture) => resolve(texture), // onLoad: Resolve the promise with the texture
+            undefined,                     // onProgress: We can ignore this for simplicity
+            (error) => reject(error)       // onError: Reject the promise with the error
+        );
+    });
 }
-
-function render() {
-
-    scene.traverse(child => {
-
-        if ( child.material !== undefined ) {
-            child.material.wireframe = parameters.wireframe;
-        }
-
-    } );
-
-    // render scene into target
-    renderer.setRenderTarget( renderTarget );
-    renderer.render( scene, camera );
-
-    // render post FX
-    renderer.setRenderTarget( null );
-    renderer.render( postScene, postCamera );
-
-}
-
