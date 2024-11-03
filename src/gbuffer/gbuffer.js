@@ -6,8 +6,6 @@ import Pass2 from "./gbufferPass2.js"
 
 init();
 
-let postScene, postCamera;
-
 async function init() {
 
     const renderer = new THREE.WebGLRenderer();
@@ -25,6 +23,8 @@ async function init() {
 
     const render = () => {
 
+        controls.update();
+
         pass1.scene.traverse(child => {
             if ( child.material !== undefined ) {
                 child.material.wireframe = parameters.wireframe;
@@ -39,6 +39,7 @@ async function init() {
         renderer.setRenderTarget(null);
         renderer.render(pass2.scene, pass2.camera);
 
+        requestAnimationFrame(render);
     }
 
     const onWindowResize = () => {
@@ -55,7 +56,10 @@ async function init() {
     }
 
     const controls = new OrbitControls( pass1.camera, renderer.domElement );
-    controls.addEventListener('change', render);
+    controls.enableDamping = true; // Smooth the controls
+    controls.dampingFactor = 0.05; // Control damping effect
+    controls.screenSpacePanning = false; // Toggle pan behavior
+    // controls.addEventListener('change', render);
 
     const parameters =
         {
@@ -68,6 +72,7 @@ async function init() {
 
     window.addEventListener( 'resize', onWindowResize );
 
+    render();
 }
 
 async function loadTexture(url) {
