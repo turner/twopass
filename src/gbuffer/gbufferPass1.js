@@ -6,11 +6,15 @@ class Pass1 {
     constructor(window, diffuse) {
 
         const { innerWidth, innerHeight, devicePixelRatio } = window
-        this.renderTarget = new THREE.WebGLRenderTarget(
-            innerWidth * devicePixelRatio,
-            innerHeight * devicePixelRatio,
-            { count: 2, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter }
-        );
+
+        const config =
+            {
+                count: 2,
+                minFilter: THREE.NearestFilter,
+                magFilter: THREE.NearestFilter
+            };
+
+        this.renderTarget = new THREE.WebGLRenderTarget(innerWidth * devicePixelRatio, innerHeight * devicePixelRatio, config);
 
         this.renderTarget.textures[ 0 ].name = 'diffuse';
         this.renderTarget.textures[ 1 ].name = 'normal';

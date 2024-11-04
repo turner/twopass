@@ -5,7 +5,6 @@ import pass2Frag from "../shaders/gbuffer_pass2.frag.glsl"
 class Pass2 {
     constructor(pass1) {
 
-        this.scene = new THREE.Scene();
         this.camera = new THREE.OrthographicCamera( - 1, 1, 1, - 1, 0, 1 );
 
         const geometry = new THREE.PlaneGeometry( 2, 2 )
@@ -31,6 +30,7 @@ class Pass2 {
 
         const material = new THREE.RawShaderMaterial(materialConfig)
 
+        this.scene = new THREE.Scene();
         this.scene.add( new THREE.Mesh(geometry, material) );
 
     }
