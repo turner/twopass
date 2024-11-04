@@ -1,6 +1,6 @@
 import * as THREE from "three"
-import pass2Vert from "./shaders/gbuffer_pass2.vert.glsl"
-import pass2Frag from "./shaders/gbuffer_pass2.frag.glsl"
+import pass2Vert from "../shaders/gbuffer_pass2.vert.glsl"
+import pass2Frag from "../shaders/gbuffer_pass2.frag.glsl"
 
 class Pass2 {
     constructor(pass1) {

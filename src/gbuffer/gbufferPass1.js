@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import pass1Vert from '../gbuffer/shaders/gbuffer_pass1.vert.glsl';
-import pass1Frag from '../gbuffer/shaders/gbuffer_pass1.frag.glsl';
+import pass1Vert from '../shaders/gbuffer_pass1.vert.glsl';
+import pass1Frag from '../shaders/gbuffer_pass1.frag.glsl';
 
 class Pass1 {
     constructor(window, diffuse) {

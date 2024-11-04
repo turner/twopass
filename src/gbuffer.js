@@ -1,8 +1,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
-import Pass1 from "./gbufferPass1.js"
-import Pass2 from "./gbufferPass2.js"
+import Pass1 from "./gbuffer/gbufferPass1.js"
+import Pass2 from "./gbuffer/gbufferPass2.js"
+import './styles/main.css';
+import texturePath from './assets/hardwood2_diffuse.jpg';
 
 init();
 
@@ -13,7 +15,7 @@ async function init() {
     renderer.setSize( window.innerWidth, window.innerHeight );
     document.body.appendChild( renderer.domElement );
 
-    const diffuse = await loadTexture('src/gbuffer/hardwood2_diffuse.jpg')
+    const diffuse = await loadTexture(texturePath)
     diffuse.wrapS = THREE.RepeatWrapping;
     diffuse.wrapT = THREE.RepeatWrapping;
     diffuse.colorSpace = THREE.SRGBColorSpace;

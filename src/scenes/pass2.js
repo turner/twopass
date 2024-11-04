@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import pass2Vert from '../scenes/shaders/pass2.vert.glsl';
-import pass2Frag from '../scenes/shaders/pass2.frag.glsl';
+import pass2Vert from '../shaders/pass2.vert.glsl';
+import pass2Frag from '../shaders/pass2.frag.glsl';
 
 export default class RenderPass2 {
     constructor() {
