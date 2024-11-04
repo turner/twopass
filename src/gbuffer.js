@@ -33,11 +33,11 @@ async function init() {
             }
         } );
 
-        // render scene into target
+        // pass 1
         renderer.setRenderTarget( pass1.renderTarget );
         renderer.render( pass1.scene, pass1.camera );
 
-        // render post FX
+        // pass 2
         renderer.setRenderTarget(null);
         renderer.render(pass2.scene, pass2.camera);
 
